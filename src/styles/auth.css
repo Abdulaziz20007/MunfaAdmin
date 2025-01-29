@@ -1,0 +1,133 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  position: relative;
+  background-color: var(--bg-default);
+  transition: background-color 0.2s ease-in-out;
+}
+
+.login-container.dark {
+  background: var(--bg-default);
+}
+
+.login-container::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: radial-gradient(
+    circle at top right,
+    var(--primary-light) 0%,
+    transparent 70%
+  );
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid;
+  border-color: rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+  background-color: var(--bg-paper);
+}
+
+.login-form.dark {
+  border-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-paper);
+}
+
+.login-form::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    var(--primary-main),
+    var(--secondary-main)
+  );
+}
+
+.login-form h2 {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-xl);
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: var(--spacing-md);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  transition: var(--transition-all);
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary-main);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.login-form button {
+  width: 100%;
+  padding: var(--spacing-md);
+  background: linear-gradient(
+    to right,
+    var(--primary-main),
+    var(--primary-dark)
+  );
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.login-form button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-switcher {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .login-form {
+    padding: 1.5rem;
+  }
+}

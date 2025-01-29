@@ -1,0 +1,36 @@
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-default);
+  transition: var(--transition-bg);
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  margin-top: 64px;
+  margin-left: 240px;
+  background-color: var(--bg-default);
+  transition: var(--transition-bg);
+}
+
+@media (max-width: 600px) {
+  .main-content {
+    margin-left: 0;
+  }
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  color: var(--text-primary);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
