@@ -195,7 +195,9 @@ const moveItem = (array, fromIndex, toIndex) => {
 const AddProductModal = ({ open, onClose, onSubmit }) => {
   const { isDark } = useTheme();
   const [loading, setLoading] = useState(false);
-  const [images, setImages] = useState([]);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [photos, setPhotos] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
@@ -206,7 +208,7 @@ const AddProductModal = ({ open, onClose, onSubmit }) => {
     stock: "0",
   });
 
-  // Add this style object
+  // Add textFieldStyle object
   const textFieldStyle = {
     "& .MuiInputBase-root": {
       bgcolor: isDark ? "var(--bg-default)" : "var(--bg-input)",
@@ -240,7 +242,11 @@ const AddProductModal = ({ open, onClose, onSubmit }) => {
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    setImages(files);
+    if (files.length > 5) {
+      setError("Maximum 5 photos allowed");
+      return;
+    }
+    setPhotos(files);
 
     // Create image previews
     const previews = files.map((file) => ({
@@ -251,40 +257,26 @@ const AddProductModal = ({ open, onClose, onSubmit }) => {
     setImagePreviews(previews);
   };
 
-  const moveImage = (fromIndex, toIndex) => {
-    const newPreviews = moveItem(imagePreviews, fromIndex, toIndex);
-    setImagePreviews(newPreviews);
-    setImages(newPreviews.map((p) => p.file));
-  };
-
-  // Clean up previews on unmount
-  useEffect(() => {
-    return () => {
-      imagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
-    };
-  }, []);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
-      const formData = new FormData();
+      setError("");
+
+      const form = new FormData();
 
       // Append text fields
-      formData.append("name", formData.name);
-      formData.append("price", formData.price);
-      formData.append("size", formData.size);
-      formData.append("quantityInBox", formData.quantityInBox);
-      formData.append("description", formData.description);
-      formData.append("stock", formData.stock);
-
-      // Append images
-      images.forEach((image) => {
-        formData.append("photos", image);
+      Object.keys(formData).forEach((key) => {
+        form.append(key, formData[key]);
       });
 
-      await onSubmit(formData);
-      onClose();
+      // Append photos
+      photos.forEach((photo) => {
+        form.append("photos", photo);
+      });
+
+      await onSubmit(form);
+      setSuccess("Product added successfully!");
 
       // Reset form
       setFormData({
@@ -295,14 +287,27 @@ const AddProductModal = ({ open, onClose, onSubmit }) => {
         description: "",
         stock: "0",
       });
-      setImages([]);
+      setPhotos([]);
       setImagePreviews([]);
+
+      // Close modal after short delay
+      setTimeout(() => {
+        onClose();
+        setSuccess("");
+      }, 1500);
     } catch (error) {
-      console.error("Failed to create product:", error);
+      setError(error.message || "Failed to add product");
     } finally {
       setLoading(false);
     }
   };
+
+  // Clean up previews on unmount
+  useEffect(() => {
+    return () => {
+      imagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
+    };
+  }, []);
 
   return (
     <Dialog
@@ -322,6 +327,38 @@ const AddProductModal = ({ open, onClose, onSubmit }) => {
           Yangi mahsulot qo'shish
         </DialogTitle>
         <DialogContent>
+          {error && (
+            <Typography
+              sx={{
+                color: "var(--error)",
+                bgcolor: isDark
+                  ? "rgba(239, 68, 68, 0.2)"
+                  : "rgba(239, 68, 68, 0.1)",
+                p: 1,
+                borderRadius: 1,
+                mb: 2,
+              }}
+            >
+              {error}
+            </Typography>
+          )}
+
+          {success && (
+            <Typography
+              sx={{
+                color: "var(--success)",
+                bgcolor: isDark
+                  ? "rgba(34, 197, 94, 0.2)"
+                  : "rgba(34, 197, 94, 0.1)",
+                p: 1,
+                borderRadius: 1,
+                mb: 2,
+              }}
+            >
+              {success}
+            </Typography>
+          )}
+
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
               label="Nomi"
@@ -379,7 +416,7 @@ const AddProductModal = ({ open, onClose, onSubmit }) => {
             {/* Image upload section */}
             <Box>
               <Typography sx={{ mb: 1, color: "var(--text-primary)" }}>
-                Rasmlar
+                Rasmlar (max 5)
               </Typography>
               <Button
                 variant="outlined"
@@ -399,155 +436,45 @@ const AddProductModal = ({ open, onClose, onSubmit }) => {
                   required
                 />
               </Button>
+
+              {/* Image previews */}
               {imagePreviews.length > 0 && (
-                <>
-                  <Typography
-                    variant="body2"
-                    sx={{ color: "var(--text-secondary)", mt: 2, mb: 1 }}
-                  >
-                    Asosiy rasmni tanlash uchun ustiga bosing
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      gap: 1,
-                      flexWrap: "wrap",
-                      minHeight: 100,
-                    }}
-                  >
-                    {imagePreviews.map((preview, index) => (
-                      <Box
-                        key={preview.id}
-                        sx={{
-                          width: 100,
-                          height: 100,
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(5, 1fr)",
+                    gap: 1,
+                    mt: 2,
+                  }}
+                >
+                  {imagePreviews.map((preview) => (
+                    <Box
+                      key={preview.id}
+                      sx={{
+                        position: "relative",
+                        paddingTop: "100%",
+                      }}
+                    >
+                      <img
+                        src={preview.url}
+                        alt="Preview"
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
                           borderRadius: "var(--radius-md)",
-                          overflow: "hidden",
-                          position: "relative",
-                          border:
-                            index === 0
-                              ? "2px solid var(--primary-main)"
-                              : "none",
-                          cursor: "pointer",
-                          "&:hover": {
-                            "& .image-actions": {
-                              opacity: 1,
-                            },
-                          },
                         }}
-                        onClick={() => {
-                          if (index !== 0) {
-                            moveImage(index, 0);
-                          }
-                        }}
-                      >
-                        <img
-                          src={preview.url}
-                          alt={`Preview ${index + 1}`}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                        <Box
-                          className="image-actions"
-                          sx={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            bgcolor: "rgba(0, 0, 0, 0.5)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            opacity: 0,
-                            transition: "var(--transition-all)",
-                          }}
-                        >
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const newPreviews = imagePreviews.filter(
-                                (_, i) => i !== index
-                              );
-                              setImagePreviews(newPreviews);
-                              setImages(newPreviews.map((p) => p.file));
-                            }}
-                            sx={{
-                              color: "#fff",
-                              "&:hover": {
-                                bgcolor: "rgba(255, 255, 255, 0.2)",
-                              },
-                            }}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                          {index > 0 && (
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                moveImage(index, index - 1);
-                              }}
-                              sx={{
-                                color: "#fff",
-                                ml: 1,
-                                "&:hover": {
-                                  bgcolor: "rgba(255, 255, 255, 0.2)",
-                                },
-                              }}
-                            >
-                              <ArrowUpward fontSize="small" />
-                            </IconButton>
-                          )}
-                          {index < imagePreviews.length - 1 && (
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                moveImage(index, index + 1);
-                              }}
-                              sx={{
-                                color: "#fff",
-                                ml: 1,
-                                "&:hover": {
-                                  bgcolor: "rgba(255, 255, 255, 0.2)",
-                                },
-                              }}
-                            >
-                              <ArrowDownward fontSize="small" />
-                            </IconButton>
-                          )}
-                        </Box>
-                        {index === 0 && (
-                          <Box
-                            sx={{
-                              position: "absolute",
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              bgcolor: "rgba(0, 0, 0, 0.7)",
-                              color: "#fff",
-                              fontSize: "12px",
-                              textAlign: "center",
-                              py: 0.5,
-                            }}
-                          >
-                            Asosiy rasm
-                          </Box>
-                        )}
-                      </Box>
-                    ))}
-                  </Box>
-                </>
+                      />
+                    </Box>
+                  ))}
+                </Box>
               )}
             </Box>
           </Stack>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 2, pt: 0 }}>
           <Button onClick={onClose} sx={{ color: "var(--text-secondary)" }}>
             Bekor qilish
           </Button>
@@ -559,6 +486,14 @@ const AddProductModal = ({ open, onClose, onSubmit }) => {
               bgcolor: "var(--primary-main)",
               "&:hover": {
                 bgcolor: "var(--primary-dark)",
+              },
+              "&.Mui-disabled": {
+                bgcolor: isDark
+                  ? "rgba(255, 255, 255, 0.12)"
+                  : "rgba(0, 0, 0, 0.12)",
+                color: isDark
+                  ? "rgba(255, 255, 255, 0.3)"
+                  : "rgba(0, 0, 0, 0.26)",
               },
             }}
           >
